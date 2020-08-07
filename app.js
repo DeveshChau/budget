@@ -8,7 +8,8 @@ const UIController = (function () {
         expenses__list: '.expenses__list',
         budget__value: '.budget__value',
         budget__income__value: '.budget__income--value',
-        budget__expenses__value: '.budget__expenses--value'
+        budget__expenses__value: '.budget__expenses--value',
+        container: '.container'
     };
     return {
         getInput: function () {
@@ -23,7 +24,7 @@ const UIController = (function () {
             if (type === 'inc') {
                 element = DOMString.income__list;
                 html = `
-                <div class="item clearfix" id="income-%id%">
+                <div class="item clearfix" id="inc-%id%">
                     <div class="item__description">%description%</div>
                     <div class="right clearfix">
                         <div class="item__value">%value%</div>
@@ -35,7 +36,7 @@ const UIController = (function () {
             } else if (type === 'exp') {
                 element = DOMString.expenses__list;
                 html = `
-                <div class="item clearfix" id="expense-%id%">
+                <div class="item clearfix" id="exp-%id%">
                     <div class="item__description">%description%</div>
                     <div class="right clearfix">
                         <div class="item__value">%value%</div>
@@ -51,6 +52,10 @@ const UIController = (function () {
             newHTML = newHTML.replace('%description%', newItem.description);
             newHTML = newHTML.replace('%value%', newItem.value);
             document.querySelector(element).insertAdjacentHTML("beforeend", newHTML)
+        },
+        deleteListItem: function (eleID) {
+            const ele = document.getElementById(eleID);
+            ele.parentNode.removeChild(ele)
         },
         clearFields: function () {
             let fields;
@@ -101,7 +106,7 @@ const DataController = (function () {
         addItem: function (type, description, value) {
             let ID, newItem
             if (data.item[type].length > 0) {
-                ID = data.item[type][data.item[type].length - 1].id + 1;
+                ID = data.item[type][data.item[type].length - 1].ID + 1;
             } else {
                 ID = 0
             }
@@ -112,6 +117,13 @@ const DataController = (function () {
             }
             data.item[type].push(newItem);
             return newItem;
+        },
+        deleteItem: function (type, ID) {
+            ids = data.item[type].map(cur => cur.ID)
+            index = ids.indexOf(ID)
+            if (index !== -1) {
+                data.item[type].splice(index, 1);
+            }
         },
         calculateBudget: function () {
             calculateTotal('inc');
@@ -124,6 +136,9 @@ const DataController = (function () {
                 inc: data.total.inc,
                 exp: data.total.exp
             }
+        },
+        testing: function() {
+            console.log(data);
         }
     }
 })();
@@ -137,12 +152,13 @@ const Controller = (function (uiCtrl, dataCtrl) {
                 ctrlAddItems();
             }
         });
-    }
+        document.querySelector(DOM.container).addEventListener('click', ctrlDeleteItem);
+    };
     const updateBudget = function () {
         dataCtrl.calculateBudget();
         const budget = dataCtrl.getBudget();
         uiCtrl.displayBudget(budget);
-    }
+    };
     const ctrlAddItems = function () {
         const input = uiCtrl.getInput();
         if (input.description !== '' && input.value > 0 && !isNaN(input.value)) {
@@ -151,7 +167,20 @@ const Controller = (function (uiCtrl, dataCtrl) {
             uiCtrl.clearFields();
             updateBudget();
         }
-    }
+    };
+    const ctrlDeleteItem = function (event) {
+        let itemID;
+        itemID = event.target.parentNode.parentNode.parentNode.parentNode.id
+        if (itemID) {
+            // 'inc-1' -> ['inc', '1']
+            splitItem = itemID.split('-');
+            type = splitItem[0];
+            ID = parseInt(splitItem[1]);
+            dataCtrl.deleteItem(type, ID);
+            uiCtrl.deleteListItem(itemID);
+            updateBudget();
+        }        
+    };
     return {
         init: function () {
             console.log('Application started.')
