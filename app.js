@@ -47,6 +47,15 @@ const UIController = (function () {
             newHTML = newHTML.replace('%value%', newItem.value);
             document.querySelector(element).insertAdjacentHTML("beforeend", newHTML)
         },
+        clearFields: function () {
+            let fields;
+            fields = document.querySelectorAll(DOMString.add__description + ', ' + DOMString.add__value);
+            fieldsArr = Array.prototype.slice.call(fields);
+            fieldsArr.forEach(function(current, index, array) {
+                current.value = "";
+            });            
+            fieldsArr[0].focus();
+        },
         getDOMString: function () {
             return DOMString;
         }
@@ -99,6 +108,7 @@ const Controller = (function (uiCtrl, dataCtrl) {
         const input = uiCtrl.getInput();
         newItem = dataCtrl.addItem(input.type, input.description, input.value);
         uiCtrl.addItemList(newItem, input.type);
+        uiCtrl.clearFields();
     }
     return {
         init: function () {
